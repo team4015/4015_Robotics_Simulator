@@ -1,0 +1,130 @@
+private void loadModel(){
+
+        List<Vector3f> vertices = new LinkedList<>();
+        List<Vector2f> textureCoords = new LinkedList<>();
+        List<Integer> indices = new LinkedList<>();
+        List<Vector3f> normals = new LinkedList<>();
+
+        String line = "";
+
+        LinkedList<String> linesToParse = new LinkedList<>();
+
+
+        try(BufferedReader br = new BufferedReader(new FileReader(pathToObjFile))) {
+            while ((line = br.readLine()) != null) {
+
+                String[] splitArray = line.split(" ");
+
+                //Parse Vertex
+                if (splitArray[0].equals("v")) {
+                    vertices.add(new Vector3f(Float.parseFloat(splitArray[1]), Float.parseFloat(splitArray[2]), Float.parseFloat(splitArray[3])));
+                    continue;
+                }
+
+                if (splitArray[0].equals("vt")) {
+                    textureCoords.add(new Vector2f(Float.parseFloat(splitArray[1]), Float.parseFloat(splitArray[2])));
+                }
+
+                if (splitArray[0].equals("vn")) {
+                    normals.add(new Vector3f(Float.parseFloat(splitArray[1]), Float.parseFloat(splitArray[2]), Float.parseFloat(splitArray[3])));
+                }
+
+                //Start parsing Faces
+                if (line.startsWith("s ")) {
+                    break;
+                }
+
+            }
+
+            this.vertices = new float[vertices.size()*3];
+            this.textureCoords = new float[vertices.size()*2];
+            this.normalVectors = new float[vertices.size()*3];
+
+
+            Vector2f [] tempTextures = textureCoords.toArray(new Vector2f[textureCoords.size()]);
+            Vector3f [] tempNormals = normals.toArray(new Vector3f[normals.size()]);
+
+
+            boolean firstFace = true;
+            int faceNumber = 1;
+            while((line = br.readLine())!=null){
+
+                if(line.startsWith("f ")){
+                    //line = line.replace("f ","");
+                    String [] verticesArray = line.split(" ");
+
+                    for(int i = 1;i<verticesArray.length; i++) {
+                        String[] vertex1 = new String[3];
+                        StringTokenizer stringTokenizer = new StringTokenizer(verticesArray[i],"/");
+                        vertex1[0] = stringTokenizer.nextToken();
+                        vertex1[1] = stringTokenizer.nextToken();
+                        vertex1[2] = stringTokenizer.nextToken();
+                        parseFace(vertex1, indices, tempTextures, tempNormals);
+                    }
+
+                  //  System.out.println("Parsed face number: "+faceNumber);
+
+                }
+
+            }
+        }catch (IOException ex){ex.printStackTrace();}
+
+            System.out.println(indices.get(indices.size()-1));
+        System.out.println("Successfully parsed: "+vertices.size()+" Vertices and "+indices.size()+" Elements");
+        instantiateIndices(indices);
+        instantiateVertices(vertices);
+
+
+
+    }
+
+
+    private void parseFace(String [] vertexData, List<Integer> indices, Vector2f [] textureCoords, Vector3f[] normals){
+
+            int currentVertexIndex = Integer.parseInt(vertexData[0])-1;
+            indices.add(currentVertexIndex);
+
+            Vector2f currentTextureCoord = textureCoords[(Integer.parseInt(vertexData[1])-1)];
+
+            this.textureCoords[currentVertexIndex * 2] = currentTextureCoord.x;
+            this.textureCoords[currentVertexIndex*2 + 1] = (float)1.0-currentTextureCoord.y;
+
+            Vector3f currentNormalVector = normals[(Integer.parseInt(vertexData[2])-1)];
+
+            normalVectors[currentVertexIndex*3] = currentNormalVector.x;
+            normalVectors[currentVertexIndex*3 + 1] = currentNormalVector.y;
+            normalVectors[currentVertexIndex*3 + 2] = currentNormalVector.z;
+
+        }
+
+        private void instantiateVertices(List<Vector3f> vertices){
+           //this.vertices = new float[vertices.size()*3];
+
+           int i =0;
+           ListIterator<Vector3f> iterator = vertices.listIterator();
+           while(iterator.hasNext()){
+               Vector3f currVertex = iterator.next();
+
+               this.vertices[i] = currVertex.x;
+               this.vertices[i+1] = currVertex.y;
+               this.vertices[i+2] = currVertex.z;
+
+               i+=3;
+           }
+
+            System.out.println("Successfully initialized vertices");
+        }
+
+        private void instantiateIndices(List<Integer> indices){
+            this.index = new int[indices.size()];
+
+            int i=0;
+
+            ListIterator<Integer> iterator = indices.listIterator();
+            while(iterator.hasNext()){
+                this.index[i] = iterator.next();
+                i++;
+            }
+            System.out.println("Successfully initialized Indices");
+
+        }

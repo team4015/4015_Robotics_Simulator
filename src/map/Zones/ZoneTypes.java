@@ -1,0 +1,12 @@
+package map.Zones;
+
+public enum ZoneTypes {
+    RED_ALLIANCE_MOVE,  // DONE
+    BLUE_ALLIANCE_MOVE, // DONE
+    ALL_MOVABLE,
+    NOT_MOVABLE,
+    START_END_ZONE_BLUE,
+    START_END_ZONE_RED,
+    BLUE_GAME_LINES,
+    RED_GAME_LINES,
+}
